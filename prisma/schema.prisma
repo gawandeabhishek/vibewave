@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email       String     @unique
+  firstName   String?
+  lastName    String?
+  userImage   String
+  clerkId     String     @unique
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  myPlaylists Playlist[] @relation("UserPlaylists")
+  likedSongs  Song[]     @relation("UserLikedSongs")
+}
+
+
+model Playlist {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  playlistId    String   @unique(map: "Playlist_playlistId_key")
+  title         String
+  description   String?
+  year          Int?
+  artist        String?
+  type          String
+  language      String?
+  link          String
+  imageUrl      String
+  userId        String?   @db.Uuid  // Change this to UUID type
+  user          User?     @relation("UserPlaylists", fields: [userId], references: [id])
+  songs         Song[]   @relation("PlaylistSongs")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+
+model Song {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  songId     String     @unique(map: "Song_songId_key")
+  userId     String?    @db.Uuid
+  user       User?       @relation("UserLikedSongs", fields: [userId], references: [id])  // Relates to User
+  playlistId String?    @db.Uuid
+  playlist   Playlist?  @relation("PlaylistSongs", fields: [playlistId], references: [id])  // Song to playlist relation
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}

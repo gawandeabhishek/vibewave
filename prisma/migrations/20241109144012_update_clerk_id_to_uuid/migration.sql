@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Playlist" ALTER COLUMN "description" DROP NOT NULL,
+ALTER COLUMN "year" DROP NOT NULL,
+ALTER COLUMN "artist" DROP NOT NULL,
+ALTER COLUMN "language" DROP NOT NULL;
