@@ -15,7 +15,7 @@ type Props = {
 };
 
 const page = async ({ params: { dataId, id } }: Props) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/${dataId}/${id}`);
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/${dataId}/${id}`);
   if (!res) return notFound();
 
   const formatFollowers = (count: number) => {

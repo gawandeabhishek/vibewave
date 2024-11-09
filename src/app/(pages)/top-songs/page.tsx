@@ -4,9 +4,7 @@ import { notFound } from "next/navigation";
 import React from "react";
 
 const page = async () => {
-  const songData = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/top-songs`, {
-    next: { revalidate: 10 }, // Revalidate every 10 seconds
-  });
+  const songData = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/top-songs`);
 
   if (!songData) return notFound(); // If the API call fails, return 404 page not found.
   const song_data = await songData.json();

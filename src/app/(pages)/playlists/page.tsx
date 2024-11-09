@@ -5,7 +5,7 @@ import React from "react";
 
 const page = async () => {
   const playlistData = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/top-playlists`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/top-playlists`,
     {
       next: { revalidate: 10 }, // Revalidate every 10 seconds
     }

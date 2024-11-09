@@ -5,7 +5,7 @@ import React from "react";
 
 const page = async () => {
   const artistData = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/featured-artists`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/featured-artists`,
     {
       next: { revalidate: 10 }, // Revalidate every 10 seconds
     }

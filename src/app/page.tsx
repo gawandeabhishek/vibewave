@@ -9,14 +9,14 @@ export default async function Home() {
 
   // const auth = await onAuthenticateUser();
   // if (auth.status === 400 || auth.status === 500 || auth.status === 404) return redirect('/auth/sign-in');
-  const songData = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/top-songs`);
+  const songData = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/top-songs`);
 
   const song_data = await songData.json();
 
   const topSongs = await song_data?.data?.data?.results;
 
   const playlistData = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/top-playlists`
+    `${process.env.NEXT_PUBLIC_API_URL}/api/top-playlists`
   );
 
   const playlist_data = await playlistData.json();
@@ -24,7 +24,7 @@ export default async function Home() {
   const topPlaylists = await playlist_data?.data?.data?.results;
 
   const artistData = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/featured-artists`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/featured-artists`,
     {
       next: { revalidate: 10 }, // Revalidate every 10 seconds
     }
