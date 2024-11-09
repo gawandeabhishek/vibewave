@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import React from "react";
 
 const page = async () => {
-  const songData = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/top-songs`);
+  const songData = await fetch(`${process.env.BASE_URL}/api/top-songs`);
   if (!songData) return notFound();
 
   if (!songData) return notFound();

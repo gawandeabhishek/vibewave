@@ -19,7 +19,7 @@ const Search = () => {
   
         // Make a fetch request to the API endpoint with the search query
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/global-search/${query}`
+          `${process.env.BASE_URL}/api/global-search/${query}`
         );
   
         if (!response.ok) {

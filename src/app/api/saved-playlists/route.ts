@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/playlist/${playlistId}`
+      `${process.env.BASE_URL}/api/playlist/${playlistId}`
     );
     const result = await res.json();
     const raw = result.data.data;
@@ -102,7 +102,7 @@ export async function GET(req: Request) {
     }
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/playlist/${playlistId}`
+      `${process.env.BASE_URL}/api/playlist/${playlistId}`
     );
     const result = await res.json();
     const raw = result.data.data;
