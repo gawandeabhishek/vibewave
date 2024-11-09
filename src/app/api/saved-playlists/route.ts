@@ -1,5 +1,3 @@
-"use server";
-
 import { db } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
@@ -52,7 +50,6 @@ export async function POST(req: Request) {
     let playlist = await db.playlist.findUnique({
       where: { playlistId: raw.id }, // Assuming 'id' is the unique identifier
     });
-    console.log(raw);
 
     // If playlist doesn't exist, create a new one
     if (!playlist) {
