@@ -11,7 +11,7 @@ const SearchResult = () => {
   const songs = results?.songs?.data.results || [];
   const playlists = results?.playlists?.data.results || [];
   const artists = results?.artists?.data?.results || [];
-  return (
+  return results && (
     <div className="flex flex-col flex-wrap justify-center items-center lg:items-start lg:justify-start gap-2 py-10">
       <div className="flex flex-col gap-10">
         {songs.length > 0 && (

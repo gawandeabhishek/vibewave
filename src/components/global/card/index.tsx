@@ -10,12 +10,13 @@ import {
 import { cn } from "@/lib/utils";
 import { ArtistNameProps } from "@/types/artists";
 import { CardContentProps, CardProps } from "@/types/card";
-import { Heart, ListMusic, Play, CirclePlay, CirclePause } from "lucide-react";
+import { CirclePlay, CirclePause } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import he from "he";
 import PlaylistIcon from "../playlist-icon";
+import SongOrArtistCard from "../song-or-artist-card";
 
 const AppCard = ({
   cardContent,
@@ -24,6 +25,7 @@ const AppCard = ({
   isArtist = false,
   isPlaylist = false,
   isSavedPlaylist = false,
+  isPlaylistOrArtistCollectionSong = false,
 }: CardProps) => {
   if (isSavedPlaylist) {
     const data: SavedPlaylistProps = {
@@ -169,61 +171,14 @@ const AppCard = ({
       </CardFooter>
     </Card>
   ) : (
-    <Link href={`${data.link}`}>
-      <Card
-        className={cn(
-          buttonVariants({ variant: isPlaying ? "secondary" : "ghost" }),
-          "flex flex-col w-60 h-fit border-none shadow-none p-0 justify-center items-center"
-        )}
-      >
-        <CardContent className="flex justify-center items-center">
-          <Image
-            src={data.image}
-            alt={data.title}
-            height={200}
-            width={200}
-            className="mt-4 rounded-xl"
-          />
-        </CardContent>
-
-        <CardHeader className="py-0 w-full flex justify-center items-center text-center">
-          <CardTitle className="truncate w-[90%]">{data.title}</CardTitle>
-          {!isArtist ? (
-            <CardDescription className="w-[80%] truncate">
-              {data.artists}
-            </CardDescription>
-          ) : null}
-        </CardHeader>
-
-        <CardFooter className="flex justify-center items-center py-2">
-          {!isArtist ? (
-            <CardDescription className="flex gap-4 items-center justify-center w-fit">
-              <span className="text-xs !text-[0.55rem] !leading-[0.5rem] flex flex-col items-center justify-center gap-0.5">
-                <>
-                  <Heart size={20} /> <span>{data.likeCount}</span>
-                </>
-              </span>
-              <span
-                className={cn(
-                  buttonVariants({ variant: "secondary", size: "icon" })
-                )}
-              >
-                <ListMusic />
-              </span>
-              {isPlay ? (
-                <span
-                  className={cn(
-                    buttonVariants({ variant: "secondary", size: "icon" })
-                  )}
-                >
-                  <Play />
-                </span>
-              ) : null}
-            </CardDescription>
-          ) : null}
-        </CardFooter>
-      </Card>
-    </Link>
+    <SongOrArtistCard
+      isPlaylistOrArtistCollectionSong={isPlaylistOrArtistCollectionSong}
+      data={data}
+      id={cardContent.id}
+      isPlay={isPlay}
+      isArtist={isArtist}
+      isPlaying={isPlaying}
+    />
   );
 };
 

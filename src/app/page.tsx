@@ -72,6 +72,7 @@ export default async function Home() {
                   key={idx}
                   isArtist={data.type === "artist"}
                   isPlaylist={data.type === "playlist"}
+                  isPlaylistOrArtistCollectionSong={data.type === "song"}
                 />
               ) : null
             )}

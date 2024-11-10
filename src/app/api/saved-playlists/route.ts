@@ -33,6 +33,11 @@ export async function POST(req: Request) {
     const result = await res.json();
     const raw = result.data.data;
     const clerkUser = await currentUser();
+
+    if (!clerkUser || !clerkUser.id) {
+      return new NextResponse("User not authenticated", { status: 401 });
+    }
+
     const user = await db.user.findUnique({
       where: { clerkId: clerkUser?.id },
     });
@@ -96,53 +101,57 @@ export async function POST(req: Request) {
   }
 }
 
+// export async function GET(req: Request) {
+//   try {
+//     const { searchParams } = new URL(req.url);
+//     const playlistId = searchParams.get("playlistId");
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const playlistId = searchParams.get("playlistId");
+//     if (!playlistId) {
+//       return new NextResponse("Playlist ID is required", { status: 400 });
+//     }
 
-    if (!playlistId) {
-      return new NextResponse("Playlist ID is required", { status: 400 });
-    }
+//     const res = await fetch(
+//       `${process.env.BASE_URL}/api/playlist/${playlistId}`
+//     );
+//     const result = await res.json();
+//     const raw = result.data.data;
+//     const clerkUser = await currentUser(); // Assuming you're getting this from Clerk or another service
 
-    const res = await fetch(
-      `${process.env.BASE_URL}/api/playlist/${playlistId}`
-    );
-    const result = await res.json();
-    const raw = result.data.data;
-    const clerkUser = await currentUser(); // Assuming you're getting this from Clerk or another service
-    const user = await db.user.findUnique({
-      where: {
-        clerkId: clerkUser?.id, // Assuming you're getting this from Clerk or another service
-      },
-    });
+//     if (!clerkUser || !clerkUser.id) {
+//       return new NextResponse("User not authenticated", { status: 401 });
+//     }
+    
+//     const user = await db.user.findUnique({
+//       where: {
+//         clerkId: clerkUser?.id, // Assuming you're getting this from Clerk or another service
+//       },
+//     });
 
-    if (!user) {
-      return new NextResponse("User not authenticated", { status: 403 });
-    }
+//     if (!user) {
+//       return new NextResponse("User not authenticated", { status: 403 });
+//     }
 
-    if (!raw) {
-      return new NextResponse("No data found", { status: 404 });
-    }
+//     if (!raw) {
+//       return new NextResponse("No data found", { status: 404 });
+//     }
 
-    const playlistExists = await db.playlist.findFirst({
-      where: {
-        playlistId: playlistId, // The playlist ID from the URL query
-        users: {
-          some: { id: user.id }, // Check if this user is in the playlist
-        },
-      },
-    });
+//     const playlistExists = await db.playlist.findFirst({
+//       where: {
+//         playlistId: playlistId, // The playlist ID from the URL query
+//         users: {
+//           some: { id: user.id }, // Check if this user is in the playlist
+//         },
+//       },
+//     });
 
-    return NextResponse.json({ exist: !!playlistExists });
-  } catch (error) {
-    console.error(error);
-    return new NextResponse("Failed to create or fetch playlist", {
-      status: 500,
-    });
-  }
-}
+//     return NextResponse.json({ exist: !!playlistExists });
+//   } catch (error) {
+//     console.error(error);
+//     return new NextResponse("Failed to create or fetch playlist", {
+//       status: 500,
+//     });
+//   }
+// }
 
 export async function DELETE(req: Request) {
   try {
