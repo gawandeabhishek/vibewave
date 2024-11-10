@@ -133,3 +133,55 @@ export async function GET(req: Request) {
     });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const { playlistId } = await req.json();
+
+    // Validate that playlistId is provided
+    if (!playlistId) {
+      return new NextResponse("playlistId is required", { status: 400 });
+    }
+
+    const clerkUser = await currentUser(); // Get the authenticated user from Clerk
+    if (!clerkUser) {
+      return new NextResponse("User not authenticated", { status: 403 });
+    }
+
+    // Find the user associated with the authenticated Clerk user
+    const user = await db.user.findUnique({
+      where: {
+        clerkId: clerkUser.id, // Match the Clerk ID to the user in the database
+      },
+    });
+
+    if (!user) {
+      return new NextResponse("User not found", { status: 404 });
+    }
+
+    // Check if the playlist is saved by the authenticated user
+    const playlist = await db.playlist.findFirst({
+      where: {
+        playlistId: playlistId, // The playlist ID from the request
+        userId: user.id, // Ensure this is the playlist saved by the current user
+      },
+    });
+
+    if (!playlist) {
+      return new NextResponse("Playlist not found in your saved playlists", { status: 404 });
+    }
+
+    // Unlink the playlist from the user by setting userId to null (only for this user)
+    await db.playlist.update({
+      where: { id: playlist.id }, // Find the playlist to unlink
+      data: {
+        userId: null, // Unlink this playlist from the user
+      },
+    });
+
+    return new NextResponse("Playlist unsaved successfully", { status: 200 });
+  } catch (error) {
+    console.error("Error unsaving playlist:", error);
+    return new NextResponse("Failed to unsave playlist", { status: 500 });
+  }
+}

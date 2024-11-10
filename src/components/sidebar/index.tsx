@@ -34,7 +34,7 @@ const items = [
   },
   {
     title: "My playlists",
-    url: "/playlists",
+    url: "/my-playlists",
     icon: ListMusic,
   },
   {

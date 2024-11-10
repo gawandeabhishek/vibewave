@@ -1,7 +1,7 @@
 import AppCard from "@/components/global/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ListMusic, Shuffle } from "lucide-react";
+import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -9,6 +9,7 @@ import numeral from "numeral";
 import { PlaylistProps, SongProps } from "@/types/song";
 import { ArtistCardProps, ArtistNameProps, ArtistProps } from "@/types/artists";
 import he from "he";
+import PlaylistIcon from "@/components/global/playlist-icon";
 
 type Props = {
   params: { dataId: string; id: string };
@@ -80,8 +81,7 @@ const page = async ({ params: { dataId, id } }: Props) => {
             raw.artists
               ?.map(
                 (singer: ArtistNameProps, idx: number) =>
-                  singer?.name +
-                  (idx === raw.artists.length - 1 ? "" : ", ")
+                  singer?.name + (idx === raw.artists.length - 1 ? "" : ", ")
               )
               .join("")
           )
@@ -123,13 +123,7 @@ const page = async ({ params: { dataId, id } }: Props) => {
               >
                 <Shuffle />
               </span>
-              <span
-                className={cn(
-                  buttonVariants({ variant: "secondary", size: "icon" })
-                )}
-              >
-                <ListMusic />
-              </span>
+              <PlaylistIcon id={raw.id} type={data.type} />
             </div>
           </div>
         </div>

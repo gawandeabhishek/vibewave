@@ -1,9 +1,12 @@
+import { onAuthenticateUser } from "@/actions/user";
 import AppCard from "@/components/global/card";
 import { SongProps } from "@/types/song";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import React from "react";
 
 const page = async () => {
+  const auth = await onAuthenticateUser();
+  if (auth.status === 400 || auth.status === 500 || auth.status === 404 || auth.status === 403) return redirect('/auth/sign-in');
   const songData = await fetch(`${process.env.BASE_URL}/api/top-songs`);
   if (!songData) return notFound();
 

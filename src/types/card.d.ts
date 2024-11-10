@@ -6,6 +6,7 @@ export type CardProps = {
   isPlaying?: boolean;
   isArtist?: boolean;
   isPlaylist?: boolean;
+  isSavedPlaylist?: boolean;
 };
 
 export type CardContentProps = {

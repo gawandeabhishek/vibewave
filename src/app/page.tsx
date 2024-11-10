@@ -1,4 +1,3 @@
-import { onAuthenticateUser } from "@/actions/user";
 import AppCard from "@/components/global/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -6,10 +5,6 @@ import { CardContentProps } from "@/types/card";
 import Link from "next/link";
 
 export default async function Home() {
-
-  const auth = await onAuthenticateUser();
-  console.log(auth.status);
-  // if (auth.status === 400 || auth.status === 500 || auth.status === 404) return redirect('/auth/sign-in');
   const songData = await fetch(`${process.env.BASE_URL}/api/top-songs`);
 
   const song_data = await songData.json();
