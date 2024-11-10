@@ -2,10 +2,8 @@ import { db } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 
-
 export type PlaylistProps = {
   playlistId: string;
-  userId: string;
   imageUrl: string;
   title: string;
   artist: string;
@@ -13,15 +11,18 @@ export type PlaylistProps = {
   language: string;
   link: string;
   description: string;
-  year: number;
+  year: number | null; // Make year nullable if it can be null
+  users?: {
+    connect: {
+      id: string;
+    }[];
+  };
 };
-
 
 export async function POST(req: Request) {
   try {
     const { playlistId } = await req.json();
 
-    // Validate that playlistId is provided
     if (!playlistId) {
       return new NextResponse("playlistId is required", { status: 400 });
     }
@@ -31,11 +32,9 @@ export async function POST(req: Request) {
     );
     const result = await res.json();
     const raw = result.data.data;
-    const clerkUser = await currentUser(); // Assuming you're getting this from Clerk or another service
+    const clerkUser = await currentUser();
     const user = await db.user.findUnique({
-      where: {
-        clerkId: clerkUser?.id, // Assuming you're getting this from Clerk or another service
-      },
+      where: { clerkId: clerkUser?.id },
     });
 
     if (!user) {
@@ -46,40 +45,48 @@ export async function POST(req: Request) {
       return new NextResponse("No data found", { status: 404 });
     }
 
-    // Check if the playlist already exists in the database using the playlistId
+    // Check if playlist exists in the database
     let playlist = await db.playlist.findUnique({
-      where: { playlistId: raw.id }, // Assuming 'id' is the unique identifier
+      where: { playlistId: raw.id },
     });
 
     // If playlist doesn't exist, create a new one
     if (!playlist) {
       const playlistData: PlaylistProps = {
-        playlistId: raw.id, // Playlist ID
-        title: raw.name, // Playlist name
-        year: raw.year ?? null, // Year of the playlist (set to null if missing)
-        type: raw.type, // Type of playlist
-        link: `/${raw.type}/${raw.id}`, // Playlist link
-        userId: user.id, // Link to the authenticated user
-        description: raw.description || undefined, // Playlist description (empty string if missing)
-        imageUrl: raw.image[raw.image.length - 1]?.url, // Image URL (empty string if missing)
-        artist: "", // Default artist field (empty string)
+        playlistId: raw.id,
+        title: raw.name,
+        year: raw.year ?? null,
+        type: raw.type,
+        link: `/${raw.type}/${raw.id}`,
+        description: raw.description || undefined,
+        imageUrl: raw.image[raw.image.length - 1]?.url,
+        artist: "",
         language: raw.language,
+        users: {
+          connect: [{ id: user.id }], // Connect the user here during creation
+        },
       };
 
-      // Add artist if it exists, otherwise keep it as an empty string
       if (raw.artists) {
         playlistData.artist = raw.artists
           .map((singer: { name: string }) => singer.name)
           .join(", ");
       }
 
-      // Create the playlist with the dynamically constructed data
+      // Create playlist with the connected user
       playlist = await db.playlist.create({
         data: playlistData,
       });
     }
+    playlist = await db.playlist.update({
+      where: { id: playlist.id },
+      data: {
+        users: {
+          connect: { id: user.id }, // Connect the user here
+        },
+      },
+    });
 
-    // Return the playlist (either created or found)
     return NextResponse.json(playlist);
   } catch (error) {
     console.error(error);
@@ -88,6 +95,7 @@ export async function POST(req: Request) {
     });
   }
 }
+
 
 export async function GET(req: Request) {
   try {
@@ -111,7 +119,7 @@ export async function GET(req: Request) {
     });
 
     if (!user) {
-      return new NextResponse("User  not authenticated", { status: 403 });
+      return new NextResponse("User not authenticated", { status: 403 });
     }
 
     if (!raw) {
@@ -121,7 +129,9 @@ export async function GET(req: Request) {
     const playlistExists = await db.playlist.findFirst({
       where: {
         playlistId: playlistId, // The playlist ID from the URL query
-        userId: user.id, // The user ID from the authenticated user
+        users: {
+          some: { id: user.id }, // Check if this user is in the playlist
+        },
       },
     });
 
@@ -138,21 +148,17 @@ export async function DELETE(req: Request) {
   try {
     const { playlistId } = await req.json();
 
-    // Validate that playlistId is provided
     if (!playlistId) {
       return new NextResponse("playlistId is required", { status: 400 });
     }
 
-    const clerkUser = await currentUser(); // Get the authenticated user from Clerk
+    const clerkUser = await currentUser();
     if (!clerkUser) {
       return new NextResponse("User not authenticated", { status: 403 });
     }
 
-    // Find the user associated with the authenticated Clerk user
     const user = await db.user.findUnique({
-      where: {
-        clerkId: clerkUser.id, // Match the Clerk ID to the user in the database
-      },
+      where: { clerkId: clerkUser.id },
     });
 
     if (!user) {
@@ -162,20 +168,26 @@ export async function DELETE(req: Request) {
     // Check if the playlist is saved by the authenticated user
     const playlist = await db.playlist.findFirst({
       where: {
-        playlistId: playlistId, // The playlist ID from the request
-        userId: user.id, // Ensure this is the playlist saved by the current user
+        playlistId: playlistId,
+        users: {
+          some: { id: user.id }, // Ensure user is linked to this playlist
+        },
       },
     });
 
     if (!playlist) {
-      return new NextResponse("Playlist not found in your saved playlists", { status: 404 });
+      return new NextResponse("Playlist not found in your saved playlists", {
+        status: 404,
+      });
     }
 
-    // Unlink the playlist from the user by setting userId to null (only for this user)
+    // Unlink the playlist from the user by disconnecting the user from the playlist
     await db.playlist.update({
-      where: { id: playlist.id }, // Find the playlist to unlink
+      where: { id: playlist.id },
       data: {
-        userId: null, // Unlink this playlist from the user
+        users: {
+          disconnect: { id: user.id },
+        },
       },
     });
 

@@ -32,11 +32,14 @@ const PlaylistIcon = ({ id, type }: { id: string; type: string }) => {
           body: JSON.stringify({ playlistId: id }),
         });
 
-        if (response) {
+        if (response.ok) {
           setIsSavedPlaylist(true); // Update state when saved
           Cookies.set(`playlist-${id}`, JSON.stringify(true)); // Update cookie when saved
         } else {
           console.error("Failed to save playlist");
+        }
+        if (response.status === 404) {
+          setIsSavedPlaylist(true);
         }
       } else {
         // Unsave the playlist
@@ -48,11 +51,16 @@ const PlaylistIcon = ({ id, type }: { id: string; type: string }) => {
           body: JSON.stringify({ playlistId: id }),
         });
 
-        if (response) {
+        console.log(response.ok)
+
+        if (response.ok) {
           setIsSavedPlaylist(false); // Update state when unsaved
           Cookies.set(`playlist-${id}`, JSON.stringify(false)); // Update cookie when unsaved
-        } else {
+        } else { // Update state when unsaved
           console.error("Failed to unsave playlist");
+        }
+        if (response.status === 404) {
+          setIsSavedPlaylist(false);
         }
       }
     } catch (error) {

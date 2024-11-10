@@ -8,22 +8,22 @@ datasource db {
 }
 
 model User {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email       String     @unique
-  firstName   String?
-  lastName    String?
-  userImage   String
-  clerkId     String     @unique
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  myPlaylists Playlist[] @relation("UserPlaylists")
-  likedSongs  Song[]     @relation("UserLikedSongs")
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String         @unique
+  firstName     String?
+  lastName      String?
+  userImage     String
+  clerkId       String         @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  myPlaylists   Playlist[]     @relation("UserPlaylists") // Correct relation
+  likedSongs    Song[]         @relation("UserLikedSongs")
+  playlistUsers PlaylistUser[] @relation("UserPlaylistUser") // Correct reverse relation
 }
 
-
 model Playlist {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  playlistId    String   @unique(map: "Playlist_playlistId_key")
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  playlistId    String         @unique(map: "Playlist_playlistId_key")
   title         String
   description   String?
   year          Int?
@@ -32,21 +32,29 @@ model Playlist {
   language      String?
   link          String
   imageUrl      String
-  userId        String?   @db.Uuid  // Change this to UUID type
-  user          User?     @relation("UserPlaylists", fields: [userId], references: [id])
-  songs         Song[]   @relation("PlaylistSongs")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  users         User[]         @relation("UserPlaylists") // Correct relation
+  songs         Song[]         @relation("PlaylistSongs")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  playlistUsers PlaylistUser[] @relation("PlaylistUserRelation") // Correct reverse relation
 }
 
-
 model Song {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  songId     String     @unique(map: "Song_songId_key")
-  userId     String?    @db.Uuid
-  user       User?       @relation("UserLikedSongs", fields: [userId], references: [id])  // Relates to User
-  playlistId String?    @db.Uuid
-  playlist   Playlist?  @relation("PlaylistSongs", fields: [playlistId], references: [id])  // Song to playlist relation
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  songId     String    @unique(map: "Song_songId_key")
+  userId     String?   @db.Uuid
+  user       User?     @relation("UserLikedSongs", fields: [userId], references: [id])
+  playlistId String?   @db.Uuid
+  playlist   Playlist? @relation("PlaylistSongs", fields: [playlistId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model PlaylistUser {
+  userId     String   @db.Uuid
+  playlistId String   @db.Uuid
+  user       User     @relation("UserPlaylistUser", fields: [userId], references: [id]) // Reverse relation
+  playlist   Playlist @relation("PlaylistUserRelation", fields: [playlistId], references: [id])
+
+  @@id([userId, playlistId]) // Composite primary key for the join table
 }
