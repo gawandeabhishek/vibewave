@@ -19,6 +19,8 @@ import {
 import Search from "../global/search";
 import Toggle from "./toggle";
 import UserIcon from "../global/user";
+import Link from "next/link";
+import StarsButton from "../global/stars-button";
 
 // Menu items.
 const items = [
@@ -60,14 +62,14 @@ export async function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-
+              <StarsButton />
               <Toggle />
             </SidebarMenu>
           </SidebarGroupContent>

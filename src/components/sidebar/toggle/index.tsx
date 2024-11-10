@@ -1,19 +1,21 @@
-"use client"
+"use client";
+import React, { useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"; // Adjust the import based on your project structure
 import { SunMoon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "@/components/ui/sidebar";
 
-const Toggle = () => {
+const CustomToggle = () => {
   const { setTheme, theme } = useTheme();
+  const { state } = useSidebar(); // Get the sidebar state
   const [mounted, setMounted] = useState(false);
 
   // Only render theme when the component is mounted (client-side)
@@ -35,9 +37,11 @@ const Toggle = () => {
         )}
       >
         <SunMoon className="size-4 rotate-0 scale-100 transition-all" />
-        <DropdownMenuLabel className="capitalize font-normal pl-0">
-          {theme}
-        </DropdownMenuLabel>
+        {state === "expanded" && ( // Only show the label when the sidebar is expanded
+          <DropdownMenuLabel className="capitalize font-normal pl-0">
+            {theme}
+          </DropdownMenuLabel>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {["light", "dark", "rose", "blue", "violet"].map((item) => (
@@ -50,4 +54,4 @@ const Toggle = () => {
   );
 };
 
-export default Toggle;
+export default CustomToggle;

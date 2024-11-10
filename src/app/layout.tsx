@@ -10,6 +10,8 @@ import Player from "@/components/global/player";
 import { SearchProvider } from "@/components/search-context";
 import SearchResultClient from "@/components/global/search-result-client"; // Import client component
 import { SongProvider } from "@/components/song-context";
+import { StarsWorldProvider } from "@/components/isStars-world-context";
+import Background from "@/components/background";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -36,7 +38,7 @@ export default function RootLayout({
     <ClerkProvider dynamic>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased relative mx-4 my-2`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased relative mx-4 my-2 transition-all`}
         >
           <ThemeProvider
             attribute="class"
@@ -47,23 +49,26 @@ export default function RootLayout({
           >
             <SearchProvider>
               <SongProvider>
-                <SidebarProvider
-                  style={
-                    {
-                      "--sidebar-width": "18rem",
-                      "--sidebar-width-mobile": "30rem",
-                    } as React.CSSProperties
-                  }
-                >
-                  <AppSidebar />
+                <StarsWorldProvider>
+                  <SidebarProvider
+                    style={
+                      {
+                        "--sidebar-width": "18rem",
+                        "--sidebar-width-mobile": "30rem",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <AppSidebar />
 
-                  <main className="w-full min-h-screen">
-                    <SidebarTrigger className="sticky top-4 h-10 w-10" />
-                    {/* Replace children with SearchResult if results are available */}
-                    <SearchResultClient>{children}</SearchResultClient>
-                    <Player className={"sticky bottom-2"} />
-                  </main>
-                </SidebarProvider>
+                    <main className="w-full min-h-screen">
+                      <SidebarTrigger className="sticky top-4 h-10 w-10" />
+                      {/* Replace children with SearchResult if results are available */}
+                      <SearchResultClient>{children}</SearchResultClient>
+                      <Player className={"sticky bottom-2"} />
+                    </main>
+                    <Background />
+                  </SidebarProvider>
+                </StarsWorldProvider>
               </SongProvider>
             </SearchProvider>
           </ThemeProvider>
