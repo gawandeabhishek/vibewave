@@ -3,7 +3,7 @@
 import { buttonVariants } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { useAuth, UserButton, useUser } from "@clerk/nextjs"; // Ensure this hook is used only in the client side
+import { UserButton, useUser } from "@clerk/nextjs"; // Ensure this hook is used only in the client side
 import { UserX } from "lucide-react";
 import Link from "next/link";
 import React from "react";
