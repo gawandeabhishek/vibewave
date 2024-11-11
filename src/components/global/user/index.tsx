@@ -3,18 +3,18 @@
 import { buttonVariants } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { useAuth, UserButton } from "@clerk/nextjs"; // Ensure this hook is used only in the client side
+import { useAuth, UserButton, useUser } from "@clerk/nextjs"; // Ensure this hook is used only in the client side
 import { UserX } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
 const UserIcon = () => {
   const { state } = useSidebar();
-  const { isSignedIn } = useAuth(); // Ensure this hook is used only in the client side
+  const { user } = useUser(); // Ensure this hook is used only in the client side
 
   return (
     <>
-      {isSignedIn ? (
+      {user ? (
         <div
           className={cn(
             buttonVariants({
@@ -29,7 +29,7 @@ const UserIcon = () => {
           <span className="flex items-center justify-start gap-2">
             <UserButton />
             <span className={state === "collapsed" ? "hidden" : "flex"}>
-              Abhishek Gawande
+              {user.firstName}&nbsp;{user.lastName}
             </span>
           </span>
         </div>
