@@ -1,9 +1,4 @@
-import {
-  Heart,
-  Home,
-  ListMusic,
-  Settings,
-} from "lucide-react";
+import { Heart, Home, ListMusic, Settings } from "lucide-react";
 
 import {
   Sidebar,
@@ -21,6 +16,7 @@ import Toggle from "./toggle";
 import UserIcon from "../global/user";
 import Link from "next/link";
 import StarsButton from "../global/stars-button";
+import { currentUser } from "@clerk/nextjs/server";
 
 // Menu items.
 const items = [
@@ -47,6 +43,8 @@ const items = [
 ];
 
 export async function AppSidebar() {
+  const user = await currentUser();
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -59,16 +57,18 @@ export async function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) =>
+                item.title === "Settings" && !user ? null : (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              )}
               <StarsButton />
               <Toggle />
             </SidebarMenu>

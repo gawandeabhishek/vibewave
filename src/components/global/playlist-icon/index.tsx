@@ -51,8 +51,6 @@ const PlaylistIcon = ({ id, type }: { id: string; type: string }) => {
           body: JSON.stringify({ playlistId: id }),
         });
 
-        console.log(response.ok)
-
         if (response.ok) {
           setIsSavedPlaylist(false); // Update state when unsaved
           Cookies.set(`playlist-${id}`, JSON.stringify(false)); // Update cookie when unsaved
@@ -69,8 +67,6 @@ const PlaylistIcon = ({ id, type }: { id: string; type: string }) => {
   };
 
   const { isSignedIn } = useAuth();
-  
-  console.log("Class applied:", isSavedPlaylist ? "bg-sidebar-ring" : "");
 
   return (
     isSignedIn && (

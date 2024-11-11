@@ -221,8 +221,6 @@ const Player = ({ className }: { className?: string }) => {
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
-  console.log(audioElement.current?.paused)
-
   return (
     <div
       className={cn(

@@ -63,8 +63,6 @@ const page = async () => {
     userId: user.id, // Assuming userId exists in your Playlist model
   }));
 
-  console.log(res)
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 w-full">
       {myPlaylists.map((item: PlaylistProps, key: number) => (
