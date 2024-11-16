@@ -68,7 +68,7 @@ const SongOrArtistCard = React.memo(({
     if (likedSongs.length === 0) {
       fetchLikedSongs();
     }
-  }, [likedSongs, fetchLikedSongs]);
+  }, [likedSongs, fetchLikedSongs, results]);
   
 
   // Update isLiked state when likedSongs change
@@ -212,5 +212,7 @@ const SongOrArtistCard = React.memo(({
     </span>
   );
 });
+
+SongOrArtistCard.displayName = 'SongOrArtistCard';
 
 export default SongOrArtistCard;
