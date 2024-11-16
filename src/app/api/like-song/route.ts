@@ -26,22 +26,20 @@ export const POST = async (req: Request): Promise<Response> => {
 
     const user = await db.user.findUnique({
       where: { clerkId: clerkUser.id },
-    });
+        });
 
+    
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+    console.log(user)
 
-    let song = await db.song.findUnique({
+    const song = await db.song.findUnique({
       where: { songId },
     });
 
     if (!song) {
-      song = await db.song.create({
-        data: {
-          songId,
-        },
-      });
+      return NextResponse.json({ error: "Song not found" }, { status: 404 });
     }
 
     await db.user.update({
@@ -57,7 +55,7 @@ export const POST = async (req: Request): Promise<Response> => {
       { message: "Song liked successfully" },
       { status: 200 }
     );
-  } catch (error) {
+      } catch (error) {
     console.error("Error liking song:", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -86,7 +84,7 @@ export const DELETE = async (req: Request): Promise<Response> => {
 
     const user = await db.user.findUnique({
       where: { clerkId: clerkUser.id },
-    });
+      });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -113,11 +111,11 @@ export const DELETE = async (req: Request): Promise<Response> => {
       { message: "Song unliked successfully" },
       { status: 200 }
     );
-  } catch (error) {
+    } catch (error) {
     console.error("Error unliking song:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
-    );
+  );
   }
 };

@@ -3,70 +3,65 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { ListMusic } from "lucide-react";
-import Cookies from "js-cookie"; // Correct import for js-cookie
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 const PlaylistIcon = ({ id, type }: { id: string; type: string }) => {
-  // Set default value to false if cookie is undefined or not available
   const [isSavedPlaylist, setIsSavedPlaylist] = useState<boolean>(false);
+  const [isToggling, setIsToggling] = useState<boolean>(false); // To prevent multiple clicks
   console.log(type)
 
-  // Ensure cookies are only accessed on the client-side
+  const { isSignedIn } = useAuth();
+
+  // Check if the playlist is saved when the component mounts
   useEffect(() => {
-    const savedStatus = Cookies.get(`playlist-${id}`); // Using Cookies.get to access cookie
-    if (savedStatus) {
-      setIsSavedPlaylist(!!JSON.parse(savedStatus));
-    }
+    const checkSavedStatus = async () => {
+      try {
+        const response = await fetch(`/api/saved-playlists/${id}`, {
+          method: "GET",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setIsSavedPlaylist(data.isSaved); // Assuming your API returns { isSaved: true/false }
+        } else {
+          console.error("Failed to fetch saved status");
+        }
+      } catch (error) {
+        console.error("Error checking saved status:", error);
+      }
+    };
+
+    checkSavedStatus();
   }, [id]);
 
-  const handleListMusic = async () => {
+  const handleListMusic = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the click from bubbling up to the parent
+    if (isToggling) return; // Prevent multiple clicks
+
+    setIsToggling(true); // Set toggling state to true
+
     try {
-      if (!isSavedPlaylist) {
-        // Save the playlist
-        const response = await fetch("/api/saved-playlists", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ playlistId: id }),
-        });
+      const method = isSavedPlaylist ? "DELETE" : "POST";
+      const response = await fetch("/api/saved-playlists", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playlistId: id }),
+      });
 
-        if (response.ok) {
-          setIsSavedPlaylist(true); // Update state when saved
-          Cookies.set(`playlist-${id}`, JSON.stringify(true)); // Update cookie when saved
-        } else {
-          console.error("Failed to save playlist");
-        }
-        if (response.status === 404) {
-          setIsSavedPlaylist(true);
-        }
+      if (response.ok) {
+        setIsSavedPlaylist((prev) => !prev); // Toggle the saved state
       } else {
-        // Unsave the playlist
-        const response = await fetch("/api/saved-playlists", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ playlistId: id }),
-        });
-
-        if (response.ok) {
-          setIsSavedPlaylist(false); // Update state when unsaved
-          Cookies.set(`playlist-${id}`, JSON.stringify(false)); // Update cookie when unsaved
-        } else { // Update state when unsaved
-          console.error("Failed to unsave playlist");
-        }
-        if (response.status === 404) {
-          setIsSavedPlaylist(false);
-        }
+        console.error("Failed to update saved playlist");
       }
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setIsToggling(false); // Reset toggling state
     }
   };
-
-  const { isSignedIn } = useAuth();
 
   return (
     isSignedIn && (
