@@ -97,14 +97,14 @@ const SongOrArtistCard = ({
           <CardFooter className="flex justify-center items-center py-2">
             {!isArtist ? (
               <CardDescription className="flex gap-4 items-center justify-center w-fit">
-                <span className="text-xs !text-[0.55rem] !leading-[0.5rem] flex flex-col items-center justify-center gap-0.5">
+                <span className="text-xs !text-[0.55rem] !leading-[0.5rem] flex flex-col items-center justify-center gap-0.5 cursor-pointer">
                   <>
                     <Heart size={20} /> <span>{data.likeCount === "0" ? "Likes" : data.likeCount}</span>
                   </>
                 </span>
                 <span
                   className={cn(
-                    buttonVariants({ variant: "secondary", size: "icon" })
+                    buttonVariants({ variant: "secondary", size: "icon" }), "cursor-pointer"
                   )}
                 >
                   <ListMusic />
@@ -112,7 +112,7 @@ const SongOrArtistCard = ({
                 {isPlay ? (
                   <span
                     className={cn(
-                      buttonVariants({ variant: "secondary", size: "icon" })
+                      buttonVariants({ variant: "secondary", size: "icon" }), "cursor-pointer"
                     )}
                   >
                     <Play />
