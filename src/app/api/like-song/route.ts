@@ -28,18 +28,20 @@ export const POST = async (req: Request): Promise<Response> => {
       where: { clerkId: clerkUser.id },
         });
 
-    
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    console.log(user)
 
-    const song = await db.song.findUnique({
+    let song = await db.song.findUnique({
       where: { songId },
     });
 
     if (!song) {
-      return NextResponse.json({ error: "Song not found" }, { status: 404 });
+      song = await db.song.create({
+        data: {
+          songId,
+        },
+      });
     }
 
     await db.user.update({

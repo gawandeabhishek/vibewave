@@ -3,7 +3,6 @@
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import {
-  Heart,
   ListMusic,
   Pause,
   Play,
@@ -16,6 +15,7 @@ import React, { useState, useEffect, useRef } from "react";
 import he from "he"; // Assuming you are using the 'he' library for HTML entity decoding
 import { useSongContext } from "@/components/song-context";
 import Link from "next/link";
+import LikeButton from "../like-button";
 
 interface ArtistNameProps {
   name: string;
@@ -296,10 +296,7 @@ const Player = ({ className }: { className?: string }) => {
           </div>
           <div className="sm:hidden flex gap-2 items-start justify-center">
             <div className="text-primary cursor-pointer text-[0.55rem] leading-[0.5rem] flex flex-col gap-2 items-center justify-center">
-              <span className="bg-primary/5 p-2 rounded-full ">
-                <Heart className="size-4 lg:size-6" />
-              </span>{" "}
-              <span>1M</span>
+              <LikeButton id={songId} isPlayerIcon />
             </div>
             <div className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer">
               <ListMusic className="size-4 lg:size-6" />
@@ -309,10 +306,7 @@ const Player = ({ className }: { className?: string }) => {
       </div>
       <div className="hidden sm:flex gap-2 items-start justify-center">
         <div className="text-primary cursor-pointer text-[0.55rem] leading-[0.5rem] flex flex-col gap-2 items-center justify-center">
-          <span className="bg-primary/5 p-2 rounded-full ">
-            <Heart className="size-4 lg:size-6" />
-          </span>{" "}
-          <span>1M</span>
+          <LikeButton id={songId} isPlayerIcon />
         </div>
         <div className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer">
           <ListMusic className="size-4 lg:size-6" />

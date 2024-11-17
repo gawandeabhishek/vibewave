@@ -1,13 +1,14 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { usePathname } from "next/navigation"; // Import usePathname for tracking path changes
 import { PlaylistProps, SongProps } from "@/types/song";
 import { ArtistProps } from "@/types/artists";
 
 // Define the shape of the context state with proper typing
 interface SearchContextType {
-  results: CardContentProps | null; // Use the specific type if you have it
-  setResults: (data: CardContentProps | null) => void; // Update the type accordingly
+  results: CardContentProps | null;
+  setResults: (data: CardContentProps | null) => void;
 }
 
 // Create the context with default values
@@ -32,7 +33,6 @@ export interface CardContentProps {
   };
 }
 
-
 // Create a custom hook to use the context easily
 export const useSearchContext = () => {
   const context = useContext(SearchContext);
@@ -45,6 +45,12 @@ export const useSearchContext = () => {
 // Provider component
 export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
   const [results, setResults] = useState<CardContentProps | null>(null); // Use the correct type or `null`
+  const pathname = usePathname(); // Get the current pathname
+
+  useEffect(() => {
+    // Reset results whenever the pathname changes
+    setResults(null);
+  }, [pathname]); // Triggered when `pathname` changes
 
   return (
     <SearchContext.Provider value={{ results, setResults }}>
