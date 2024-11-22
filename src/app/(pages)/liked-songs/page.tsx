@@ -40,8 +40,6 @@ const page = async () => {
     })
   );
 
-  console.log(likedSongs); // This should now log the array of song details
-
   return (
     <div className="flex flex-wrap justify-center items-center lg:items-start lg:justify-start gap-2">
       {likedSongs.map((item: SongProps, key: number) => (

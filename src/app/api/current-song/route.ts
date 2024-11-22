@@ -2,6 +2,7 @@ import { db } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+
 export async function POST(req: Request) {
   try {
     // Parse the request body to get currentSongId

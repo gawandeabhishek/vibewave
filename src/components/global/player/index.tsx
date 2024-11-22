@@ -7,12 +7,14 @@ import {
   Pause,
   Play,
   Repeat,
+  Repeat1,
+  Shuffle,
   SkipBack,
   SkipForward,
 } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect, useRef } from "react";
-import he from "he"; // Assuming you are using the 'he' library for HTML entity decoding
+import he from "he";
 import { useSongContext } from "@/components/song-context";
 import Link from "next/link";
 import LikeButton from "../like-button";
@@ -29,18 +31,31 @@ interface CardContentProps {
   artists: string;
   likeCount: number;
   downloadUrl: string;
+  songId: string;
 }
 
 const Player = ({ className }: { className?: string }) => {
   const [songData, setSongData] = useState<CardContentProps | null>(null);
-  const [songId, setSongId] = useState<string>(""); // To store the current song ID
-  const [currentTime, setCurrentTime] = useState(0); // To store the current playback time
-  const [duration, setDuration] = useState(0); // To store the total duration of the song
-  const [isPlaying, setIsPlaying] = useState(false); // To control play/pause state
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(() => {
+    const saved = localStorage.getItem("isPlaying");
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [isLoop, setIsLoop] = useState(() => {
+    const saved = localStorage.getItem("isLoop");
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [onceLoop, setOnceLoop] = useState(() => {
+    const saved = localStorage.getItem("onceLoop");
+    return saved ? JSON.parse(saved) : false;
+  });
   const audioElement = useRef<HTMLAudioElement>(null);
-  const { currentSongId } = useSongContext();
+  const { currentSongId, setCurrentSongId } = useSongContext();
+  const [songs, setSongs] = useState<CardContentProps[]>([]);
+  const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
 
-  // Fetch song data when the component mounts
+  // Fetch song data when the component mounts or currentSongId changes
   useEffect(() => {
     const fetchSongData = async () => {
       try {
@@ -48,6 +63,141 @@ const Player = ({ className }: { className?: string }) => {
         if (res.ok) {
           const data = await res.json();
           const song = data.data.data[0];
+
+          const formattedData: CardContentProps = {
+            title: he.decode(song.name),
+            image: song.image[song.image.length - 1]?.url,
+            link: `/${song.type}/${song.id}`,
+            type: song.type,
+            artists: song.artists.primary
+              ? he.decode(
+                  song.artists.primary
+                    ?.map(
+                      (singer: ArtistNameProps, idx: number) =>
+                        singer?.name +
+                        (idx === song.artists.primary.length - 1 ? "" : ", ")
+                    )
+                    .join("")
+                )
+              : "",
+            likeCount: 0,
+            downloadUrl: song.downloadUrl[song?.downloadUrl?.length - 1].url,
+            songId: song.id,
+          };
+
+          setSongData(formattedData);
+          setCurrentSongId(song.id); // Store the song ID
+
+          // Retrieve the stored current time from localStorage
+          const savedTime = localStorage.getItem(`song-${song.id}-time`);
+          if (savedTime) {
+            setCurrentTime(parseFloat(savedTime)); // Set the current time to the saved time
+          }
+        } else {
+          console.error("Error fetching current song:", res.statusText);
+        }
+      } catch (error) {
+        console.error("Failed to fetch song data:", error);
+      }
+    };
+
+    fetchSongData();
+  }, [currentSongId, currentSongIndex, setCurrentSongId]);
+
+  // Handle audio playback and state changes
+  useEffect(() => {
+    if (audioElement.current) {
+      if (isPlaying) {
+        audioElement.current.autoplay = true;
+        audioElement.current.play();
+      } else {
+        audioElement.current.pause();
+      }
+    }
+  }, [isPlaying, currentSongId]);
+
+  // Save states to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("isPlaying", JSON.stringify(isPlaying));
+  }, [isPlaying]);
+
+  useEffect(() => {
+    localStorage.setItem("isLoop", JSON.stringify(isLoop));
+  }, [isLoop]);
+
+  useEffect(() => {
+    localStorage.setItem("onceLoop", JSON.stringify(onceLoop));
+  }, [onceLoop]);
+
+  // Handle audio end event
+  const handleEnd = () => {
+    if (isLoop) {
+      // Restart the audio from the beginning
+      audioElement.current!.currentTime = 0;
+      audioElement.current!.play();
+      setCurrentTime(0);
+    } else if (onceLoop) {
+      // Restart the audio from the beginning
+      audioElement.current!.currentTime = 0;
+      audioElement.current!.play();
+      setCurrentTime(0);
+      setOnceLoop(false);
+      setIsLoop(false);
+    } else {
+      skipForward();
+    }
+  };
+
+  const handleLoopingClick = () => {
+    if (!isLoop && !onceLoop) {
+      setIsLoop(false);
+      setOnceLoop(true);
+    } else if (onceLoop && !isLoop) {
+      setIsLoop(true);
+      setOnceLoop(false);
+    } else {
+      setIsLoop(false);
+      setOnceLoop(false);
+    }
+  };
+
+  // Function to toggle play/pause
+  const togglePlay = () => {
+    setIsPlaying((prev: boolean) => !prev);
+  };
+
+  // Fetch songs from the database
+  useEffect(() => {
+    const fetchSongsFromDB = async () => {
+      try {
+        const res = await fetch(`/api/songs`, { method: "GET" });
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentSongIndex(data.currentIndex);
+          setCurrentSongId(data.id);
+          setSongs(data.songs);
+        } else {
+          console.error("Failed to fetch songs:", res.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching songs:", error);
+      }
+    };
+
+    fetchSongsFromDB();
+  }, [currentSongId, setCurrentSongId]);
+
+  const skipForward = async () => {
+    if (currentSongIndex + 1 >= songs.length) {
+      try {
+        const res = await fetch(`/api/songs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: currentSongId }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const song = data.data;
 
           // Transform the response data into the desired format
           const formattedData: CardContentProps = {
@@ -68,153 +218,109 @@ const Player = ({ className }: { className?: string }) => {
               : "",
             likeCount: 0, // Set the like count (you can modify it as needed)
             downloadUrl: song.downloadUrl[song?.downloadUrl?.length - 1].url,
+            songId: song.id,
           };
+          const saved = await fetch(`/api/current-song`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ currentSongId: song.id }),
+            credentials: "include", // Ensure cookies are sent
+          });
+
+          if (!saved.ok) {
+            const errorText = await saved.text();
+            console.error("Failed to update current song:", errorText);
+            return;
+          }
 
           // Set the song data and song ID to the state
           setSongData(formattedData);
-          setSongId(song.id); // Store the song ID
-
-          // Retrieve the stored current time from localStorage
-          const savedTime = localStorage.getItem(`song-${song.id}-time`);
-          if (savedTime) {
-            setCurrentTime(parseFloat(savedTime)); // Set the current time to the saved time
-          }
-        } else {
-          console.error("Error fetching current song:", res.statusText);
+          setCurrentSongId(song.id); // Store the song ID
         }
       } catch (error) {
-        console.error("Failed to fetch song data:", error);
+        console.error("Error updating queue:", error);
       }
-    };
+    } else {
+      const nextIndex = currentSongIndex + 1; // Calculate the previous song index
+      const nextSong = songs[nextIndex];
 
-    fetchSongData();
-  }, [currentSongId]); // Added songData as a dependency to re-fetch when it changes
-
-  // Function to toggle play/pause
-  const togglePlay = () => {
-    if (audioElement.current) {
-      // If the song is already playing, pause it
-      if (isPlaying) {
-        audioElement.current.pause();
-      } else {
-        // If the song is not playing, set the current time from saved state
-        audioElement.current.currentTime = currentTime;
-        audioElement.current.play();
+      if (nextSong) {
+        setCurrentSongIndex(nextIndex);
+        setSongData(nextSong);
+        setCurrentSongId(nextSong.songId); // Update context with the previous song ID
+        
+        try {
+          const res = await fetch(`/api/current-song`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ currentSongId: nextSong.songId }),
+            credentials: "include",
+          });
+  
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error("Failed to update current song:", errorText);
+          }
+        } catch (error) {
+          console.error("Error updating queue:", error);
+        }
+  
+        if (audioElement.current) {
+          audioElement.current.src = nextSong.downloadUrl;
+          audioElement.current.load();
+          audioElement.current.play();
+          setIsPlaying(true);
+        }
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
-  useEffect(() => {
-    if (audioElement.current) {
-      if (isPlaying) {
-        audioElement.current.autoplay = true;
+  const skipBack = async () => {
+    const prevIndex = (currentSongIndex - 1 + songs.length) % songs.length; // Calculate the previous song index
+    const prevSong = songs[prevIndex];
+
+    if (prevSong) {
+      setCurrentSongIndex(prevIndex);
+      setSongData(prevSong);
+      setCurrentSongId(prevSong.songId); // Update context with the previous song ID
+
+      try {
+        const res = await fetch(`/api/current-song`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentSongId: prevSong.songId }),
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("Failed to update current song:", errorText);
+        }
+      } catch (error) {
+        console.error("Error updating queue:", error);
+      }
+
+      if (audioElement.current) {
+        audioElement.current.src = prevSong.downloadUrl;
+        audioElement.current.load();
         audioElement.current.play();
-      } else {
-        audioElement.current.pause();
+        setIsPlaying(true);
       }
     }
-  }, [isPlaying, currentSongId]); // Only run this effect when the `play` or `pause` state changes
-
-  // // Skip forward to the next song
-  // const skipForward = async () => {
-  //   try {
-  //     const response = await fetch(`/api/next-song?currentSongId=${songId}`);
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       const nextSong = data.song;
-
-  //       setSongData({
-  //         title: he.decode(nextSong.name),
-  //         image: nextSong.image[nextSong.image.length - 1]?.url,
-  //         link: `/${nextSong.type}/${nextSong.id}`,
-  //         type: nextSong.type,
-  //         artists: nextSong.artists.primary
-  //           ? he.decode(
-  //               nextSong.artists.primary
-  //                 ?.map(
-  //                   (singer: ArtistNameProps, idx: number) =>
-  //                     singer?.name +
-  //                     (idx === nextSong.artists.primary.length - 1 ? "" : ", ")
-  //                 )
-  //                 .join("")
-  //             )
-  //           : "",
-  //         likeCount: 0,
-  //         downloadUrl:
-  //           nextSong.downloadUrl[nextSong?.downloadUrl?.length - 1].url,
-  //       });
-  //       setSongId(nextSong.id);
-  //       if (audioElement.current) {
-  //         audioElement.current.src =
-  //           nextSong.downloadUrl[nextSong?.downloadUrl?.length - 1].url;
-  //         audioElement.current.play(); // Play the next song
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Error skipping forward:", error);
-  //   }
-  // };
-
-  // // Skip backward to the previous song
-  // const skipBack = async () => {
-  //   try {
-  //     const response = await fetch(`/api/prev-song?currentSongId=${songId}`);
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       const prevSong = data.song;
-
-  //       setSongData({
-  //         title: he.decode(prevSong.name),
-  //         image: prevSong.image[prevSong.image.length - 1]?.url,
-  //         link: `/${prevSong.type}/${prevSong.id}`,
-  //         type: prevSong.type,
-  //         artists: prevSong.artists.primary
-  //           ? he.decode(
-  //               prevSong.artists.primary
-  //                 ?.map(
-  //                   (singer: ArtistNameProps, idx: number) =>
-  //                     singer?.name +
-  //                     (idx === prevSong.artists.primary.length - 1 ? "" : ", ")
-  //                 )
-  //                 .join("")
-  //             )
-  //           : "",
-  //         likeCount: 0,
-  //         downloadUrl:
-  //           prevSong.downloadUrl[prevSong?.downloadUrl?.length - 1].url,
-  //       });
-  //       setSongId(prevSong.id);
-  //       if (audioElement.current) {
-  //         audioElement.current.src =
-  //           prevSong.downloadUrl[prevSong?.downloadUrl?.length - 1].url;
-  //         audioElement.current.play(); // Play the previous song
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Error skipping back:", error);
-  //   }
-  // };
-
-  // Function to handle the onTimeUpdate event
-  const onPlaying = (event: React.SyntheticEvent<HTMLAudioElement>) => {
-    const audio = event.target as HTMLAudioElement;
-    setCurrentTime(audio.currentTime); // Update the current time
-
-    // Save the current time in localStorage
-    if (songId) {
-      localStorage.setItem(`song-${songId}-time`, audio.currentTime.toString());
-    }
-
-    setDuration(audio.duration); // Update the duration
   };
 
-  // If no song data is provided, show fallback UI
-  if (!songData) {
-    return <></>;
-  }
+  const onPlaying = () => {
+    if (audioElement.current) {
+      const currentTime = audioElement.current.currentTime;
+      localStorage.setItem(
+        `song-${songData?.songId}-time`,
+        currentTime.toString()
+      );
+      setCurrentTime(currentTime);
+      setDuration(audioElement.current.duration);
+    }
+  };
 
-  // Helper function to format time in minutes:seconds
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
@@ -222,97 +328,115 @@ const Player = ({ className }: { className?: string }) => {
   };
 
   return (
-    <div
-      className={cn(
-        className,
-        "flex justify-between h-32 sm:h-20 px-4 py-2 rounded-md gap-10 items-start bg-primary/5 backdrop-blur-sm"
-      )}
-    >
-      <audio
-        ref={audioElement}
-        src={songData?.downloadUrl}
-        onTimeUpdate={onPlaying}
-        onEnded={() => setIsPlaying(false)}
-        onLoadedMetadata={(e) => {
-          const audio = e.target as HTMLAudioElement;
-          setDuration(audio.duration);
-        }}
-      />
-      <Link href={`/${songData.type}/${currentSongId}`} className="flex items-center gap-4 w-fit">
-        <Image
-          src={songData.image}
-          alt={songData.title}
-          width={50}
-          height={50}
-          className={"rounded-md"}
+    songData && (
+      <div
+        className={cn(
+          className,
+          "flex justify-between h-32 sm:h-20 px-4 py-2 rounded-md gap-10 items-start bg-primary/5 backdrop-blur-sm"
+        )}
+      >
+        <audio
+          ref={audioElement}
+          src={songData?.downloadUrl}
+          onTimeUpdate={onPlaying}
+          onEnded={handleEnd}
+          onLoadedMetadata={(e) => {
+            const audio = e.target as HTMLAudioElement;
+            setDuration(audio.duration);
+          }}
         />
-        <div className="hidden lg:flex flex-col justify-center w-40 pr-10">
-          <h3 className="font-bold truncate">
-            {songData.title}
-          </h3>
-          <p className="text-xs text-secondary-foreground truncate w-[60%]">
-            {songData.artists}
-          </p>
-        </div>
-      </Link>
-      <div className="flex flex-col items-center w-fit gap-2">
-        <div className="flex items-center gap-2 text-xs font-semibold text-primary">
-          <span>{formatTime(currentTime)}</span>
-          <Slider
-            max={100}
-            step={0.000001}
-            value={[Math.floor((currentTime / duration) * 100)]} // Use percentage for progress
-            onValueChange={(value) => {
-              if (audioElement.current) {
-                const newTime = (value[0] / 100) * duration;
-                audioElement.current.currentTime = newTime; // Update audio current time
-              }
-            }}
-            className="w-28 md:w-40 lg:w-[14rem] xl:w-[25rem]"
+        <Link
+          href={`/${songData.type}/${currentSongId}`}
+          className="flex items-center gap-4 w-fit"
+        >
+          <Image
+            src={songData.image}
+            alt={songData.title}
+            width={50}
+            height={50}
+            className={"rounded-md"}
           />
-          <span>{formatTime(duration)}</span>
-        </div>
-        <div className="col-start-2 justify-self-center flex items-center sm:flex-row flex-col justify-normal gap-2">
-          <div className="flex gap-2">
-            <div className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer">
-              <SkipBack className="size-4 lg:size-6" />
+          <div className="hidden lg:flex flex-col justify-center w-40 pr-10">
+            <h3 className="font-bold truncate">{songData.title}</h3>
+            <p className="text-xs text-secondary-foreground truncate w-[60%]">
+              {songData.artists}
+            </p>
+          </div>
+        </Link>
+        <div className="flex flex-col items-center w-fit gap-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+            <span>{formatTime(currentTime)}</span>
+            <Slider
+              max={100}
+              step={0.000001}
+              value={[Math.floor((currentTime / duration) * 100)]}
+              onValueChange={(value) => {
+                if (audioElement.current) {
+                  const newTime = (value[0] / 100) * duration;
+                  audioElement.current.currentTime = newTime;
+                }
+              }}
+              className="w-28 md:w-40 lg:w-[14rem] xl:w-[25rem]"
+            />
+            <span>{formatTime(duration)}</span>
+          </div>
+          <div className="col-start-2 justify-self-center flex items-center sm:flex-row flex-col justify-normal gap-2">
+            <div className="flex gap-2">
+              <div
+                className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer"
+                onClick={skipBack}
+              >
+                <SkipBack className="size-4 lg:size-6" />
+              </div>
+              <div
+                className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer"
+                onClick={togglePlay}
+              >
+                {isPlaying ? (
+                  <Pause className="text-primary size-4 lg:size-6" />
+                ) : (
+                  <Play className="text-primary size-4 lg:size-6" />
+                )}
+              </div>
+              <div
+                className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer"
+                onClick={skipForward}
+              >
+                <SkipForward className="size-4 lg:size-6" />
+              </div>
+              <div
+                className="bg-primary/5 p-2 rounded-full cursor-pointer"
+                onClick={handleLoopingClick}
+              >
+                {onceLoop ? (
+                  <Repeat />
+                ) : isLoop ? (
+                  <Repeat1 />
+                ) : (
+                  <Shuffle className="text-primary size-4 lg:size-6" />
+                )}
+              </div>
             </div>
-            <div
-              className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer"
-              onClick={togglePlay}
-            >
-              {!audioElement.current?.paused ? (
-                <Pause className="text-primary size-4 lg:size-6" />
-              ) : (
-                <Play className="text-primary size-4 lg:size-6" />
-              )}
-            </div>
-            <div className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer">
-              <SkipForward className="size-4 lg:size-6" />
-            </div>
-            <div className="bg-primary/5 p-2 rounded-full cursor-pointer">
-              <Repeat className="text-primary size-4 lg:size-6" />
+            <div className="sm:hidden flex gap-2 items-start justify-center">
+              <div className="text-primary cursor-pointer text-[0.55rem] leading-[0.5rem] flex flex-col gap-2 items-center justify-center">
+                <LikeButton id={songData.songId} isPlayerIcon />
+              </div>
+              <div className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer">
+                <ListMusic className="size-4 lg:size-6" />
+              </div>
             </div>
           </div>
-          <div className="sm:hidden flex gap-2 items-start justify-center">
-            <div className="text-primary cursor-pointer text-[0.55rem] leading-[0.5rem] flex flex-col gap-2 items-center justify-center">
-              <LikeButton id={songId} isPlayerIcon />
-            </div>
-            <div className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer">
-              <ListMusic className="size-4 lg:size-6" />
-            </div>
+        </div>
+        <div className="hidden sm:flex gap-2 items-start justify-center">
+          <div className="text-primary cursor-pointer text-[0.55rem] leading-[0.5rem] flex flex-col gap-2 items-center justify-center">
+            <LikeButton id={songData.songId} isPlayerIcon />
+          </div>
+          <div className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer">
+            <ListMusic className="size-4 lg:size-6" />
           </div>
         </div>
       </div>
-      <div className="hidden sm:flex gap-2 items-start justify-center">
-        <div className="text-primary cursor-pointer text-[0.55rem] leading-[0.5rem] flex flex-col gap-2 items-center justify-center">
-          <LikeButton id={songId} isPlayerIcon />
-        </div>
-        <div className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer">
-          <ListMusic className="size-4 lg:size-6" />
-        </div>
-      </div>
-    </div>
+    )
   );
 };
 

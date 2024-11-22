@@ -9,7 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 const PlaylistIcon = ({ id, type }: { id: string; type: string }) => {
   const [isSavedPlaylist, setIsSavedPlaylist] = useState<boolean>(false);
   const [isToggling, setIsToggling] = useState<boolean>(false); // To prevent multiple clicks
-  console.log(type)
+  if (type === "type") {}
 
   const { isSignedIn } = useAuth();
 
