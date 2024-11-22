@@ -1,7 +1,4 @@
 import AppCard from "@/components/global/card";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -10,6 +7,7 @@ import { PlaylistProps, SongProps } from "@/types/song";
 import { ArtistCardProps, ArtistNameProps, ArtistProps } from "@/types/artists";
 import he from "he";
 import PlaylistIcon from "@/components/global/playlist-icon";
+import PlayListPlayIcon from "@/components/global/playlist-play-icon";
 
 type Props = {
   params: { dataId: string; id: string };
@@ -115,14 +113,7 @@ const page = async ({ params: { dataId, id } }: Props) => {
             {data.language ? <p>Language: {data.language}</p> : null}
 
             <div className="flex gap-4 items-center w-fit">
-              <span
-                className={cn(
-                  buttonVariants({ variant: "secondary", size: "icon" }),
-                  "my-4"
-                )}
-              >
-                <Shuffle />
-              </span>
+              <PlayListPlayIcon playlistId={raw.id} />
               <PlaylistIcon id={raw.id} type={data.type} />
             </div>
           </div>

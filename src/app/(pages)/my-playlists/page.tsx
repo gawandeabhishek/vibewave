@@ -25,7 +25,12 @@ export interface PlaylistProps {
 const page = async () => {
   // Authenticate the user
   const auth = await onAuthenticateUser();
-  if (auth.status === 400 || auth.status === 500 || auth.status === 404 || auth.status === 403)
+  if (
+    auth.status === 400 ||
+    auth.status === 500 ||
+    auth.status === 404 ||
+    auth.status === 403
+  )
     return redirect("/auth/sign-in");
 
   const user = await currentUser();
@@ -39,7 +44,7 @@ const page = async () => {
       clerkId: user.id,
     },
     include: {
-      myPlaylists: true
+      myPlaylists: true,
     },
   });
 
@@ -64,17 +69,22 @@ const page = async () => {
   }));
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 w-full">
-      {myPlaylists.map((item: PlaylistProps, key: number) => (
-        <AppCard
-          cardContent={item}
-          key={key}
-          isPlay
-          isPlaying={false}
-          isPlaylist
-          isSavedPlaylist
-        />
-      ))}
+    <div className="ml-8">
+      <h4 className="font-extrabold pl-4 sm:pl-0 text-3xl sm:text-5xl sm:text-start my-10">
+        My Playlists
+      </h4>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 w-full">
+        {myPlaylists.map((item: PlaylistProps, key: number) => (
+          <AppCard
+            cardContent={item}
+            key={key}
+            isPlay
+            isPlaying={false}
+            isPlaylist
+            isSavedPlaylist
+          />
+        ))}
+      </div>
     </div>
   );
 };

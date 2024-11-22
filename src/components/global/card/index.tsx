@@ -17,6 +17,7 @@ import React from "react";
 import he from "he";
 import PlaylistIcon from "../playlist-icon";
 import SongOrArtistCard from "../song-or-artist-card";
+import PlayListPlayIcon from "../playlist-play-icon";
 
 const AppCard = ({
   cardContent,
@@ -151,13 +152,7 @@ const AppCard = ({
         <CardDescription className="flex gap-4 items-center w-fit">
           <PlaylistIcon id={cardContent.id} type={cardContent.type} />
           {!isPlay ? (
-            <span
-              className={cn(
-                buttonVariants({ variant: "secondary", size: "icon" })
-              )}
-            >
-              <CirclePlay />
-            </span>
+            <PlayListPlayIcon playlistId={cardContent.id} />
           ) : (
             <span
               className={cn(

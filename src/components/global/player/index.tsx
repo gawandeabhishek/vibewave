@@ -248,7 +248,7 @@ const Player = ({ className }: { className?: string }) => {
         setCurrentSongIndex(nextIndex);
         setSongData(nextSong);
         setCurrentSongId(nextSong.songId); // Update context with the previous song ID
-        
+
         try {
           const res = await fetch(`/api/current-song`, {
             method: "POST",
@@ -256,7 +256,7 @@ const Player = ({ className }: { className?: string }) => {
             body: JSON.stringify({ currentSongId: nextSong.songId }),
             credentials: "include",
           });
-  
+
           if (!res.ok) {
             const errorText = await res.text();
             console.error("Failed to update current song:", errorText);
@@ -264,7 +264,7 @@ const Player = ({ className }: { className?: string }) => {
         } catch (error) {
           console.error("Error updating queue:", error);
         }
-  
+
         if (audioElement.current) {
           audioElement.current.src = nextSong.downloadUrl;
           audioElement.current.load();
@@ -392,7 +392,7 @@ const Player = ({ className }: { className?: string }) => {
                 className="bg-primary/5 p-2 rounded-full text-primary cursor-pointer"
                 onClick={togglePlay}
               >
-                {isPlaying ? (
+                {!audioElement.current?.paused ? (
                   <Pause className="text-primary size-4 lg:size-6" />
                 ) : (
                   <Play className="text-primary size-4 lg:size-6" />
