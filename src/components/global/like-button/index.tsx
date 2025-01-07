@@ -62,7 +62,11 @@ const LikeButton = ({
   };
 
   return isPlayerIcon ? (
-      <span className="flex flex-col items-center justify-center gap-2 bg-primary/5 p-2 rounded-full" onClick={handleLike}>
+    <>
+      <span
+        className="flex flex-col items-center justify-center gap-2 bg-primary/5 p-2 rounded-full"
+        onClick={handleLike}
+      >
         <Heart
           size={20}
           className={cn(
@@ -70,8 +74,9 @@ const LikeButton = ({
             isLiked ? "text-rose-600 border-0" : ""
           )}
         />{" "}
+      </span>
       <span>{likeCount === "0" ? "Likes" : likeCount}</span>
-    </span>
+    </>
   ) : (
     <span
       className="text-xs !text-[0.55rem] !leading-[0.5rem] flex flex-col items-center justify-center gap-0.5 cursor-pointer"
