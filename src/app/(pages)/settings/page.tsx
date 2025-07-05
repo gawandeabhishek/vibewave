@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 
 export default function SettingsPage() {
   const [form, setForm] = useState({
@@ -20,18 +21,24 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       const user = await getUserData();
-      if (user) {
-        setForm({
-          firstName: user.firstName || "",
-          lastName: user.lastName || "",
-        });
+
+      // 🔁 Redirect if no user
+      if (!user) {
+        redirect("/auth/sign-in");
+        return;
       }
+
+      // ✅ Set form values if user exists
+      setForm({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+      });
+
       setLoading(false);
     };
 
     fetchInitialData();
   }, []);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
