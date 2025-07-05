@@ -39,17 +39,29 @@ const Player = ({ className }: { className?: string }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(() => {
-    const saved = localStorage.getItem("isPlaying");
-    return saved ? JSON.parse(saved) : false;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("isPlaying");
+      return saved ? JSON.parse(saved) : false;
+    }
+    return false;
   });
+
   const [isLoop, setIsLoop] = useState(() => {
-    const saved = localStorage.getItem("isLoop");
-    return saved ? JSON.parse(saved) : false;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("isLoop");
+      return saved ? JSON.parse(saved) : false;
+    }
+    return false;
   });
+
   const [onceLoop, setOnceLoop] = useState(() => {
-    const saved = localStorage.getItem("onceLoop");
-    return saved ? JSON.parse(saved) : false;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("onceLoop");
+      return saved ? JSON.parse(saved) : false;
+    }
+    return false;
   });
+
   const audioElement = useRef<HTMLAudioElement>(null);
   const { currentSongId, setCurrentSongId } = useSongContext();
   const [songs, setSongs] = useState<CardContentProps[]>([]);
