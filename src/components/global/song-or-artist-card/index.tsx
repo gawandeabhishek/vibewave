@@ -15,8 +15,8 @@ import { CardContentProps } from "@/types/card";
 import { ListMusic, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import LikeButton from "../like-button";
 import React from "react";
+import LikeButton from "../like-button";
 
 type Props = {
   isPlaylistOrArtistCollectionSong: boolean;

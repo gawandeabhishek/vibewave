@@ -1,7 +1,9 @@
 "use client";
 
+import { useSongContext } from "@/components/song-context";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import he from "he";
 import {
   ListMusic,
   Pause,
@@ -13,10 +15,8 @@ import {
   SkipForward,
 } from "lucide-react";
 import Image from "next/image";
-import React, { useState, useEffect, useRef } from "react";
-import he from "he";
-import { useSongContext } from "@/components/song-context";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import LikeButton from "../like-button";
 
 interface ArtistNameProps {

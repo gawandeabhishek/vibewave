@@ -6,17 +6,23 @@ import { cn } from "@/lib/utils";
 
 type LikeButtonProps = {
   id: string; // Song ID
-  likeCount?: string; // Number of likes
   isPlayerIcon?: boolean; // Whether or not to display
 };
 
-const LikeButton = ({
-  id,
-  likeCount = "0",
-  isPlayerIcon = false,
-}: LikeButtonProps) => {
+const LikeButton = ({ id, isPlayerIcon = false }: LikeButtonProps) => {
   const [isLiked, setIsLiked] = useState<boolean>(false);
   const [isLiking, setIsLiking] = useState<boolean>(false);
+  const [likeCount, setLikeCount] = useState();
+
+  useEffect(() => {
+    fetchLikes(id);
+  }, [isLiked]);
+
+  const fetchLikes = async (id: string) => {
+    const res = await fetch(`/api/like-count?songId=${id}`);
+    const data = await res.json();
+    setLikeCount(data.likes);
+  };
 
   const fetchLikedSongs = useCallback(async () => {
     try {
@@ -75,7 +81,7 @@ const LikeButton = ({
           )}
         />{" "}
       </span>
-      <span>{likeCount === "0" ? "Likes" : likeCount}</span>
+      <span>{likeCount == 0 ? "Likes" : likeCount}</span>
     </>
   ) : (
     <span
@@ -86,7 +92,7 @@ const LikeButton = ({
         size={20}
         className={cn(isLiked ? "text-rose-600 border-0" : "")}
       />
-      <span>{likeCount === "0" ? "Likes" : likeCount}</span>
+      <span>{likeCount == 0 ? "Likes" : likeCount}</span>
     </span>
   );
 };

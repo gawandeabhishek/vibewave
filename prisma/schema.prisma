@@ -42,16 +42,16 @@ model Playlist {
 }
 
 model Song {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  songId     String    @unique(map: "Song_songId_key")
-  userId     String?   @db.Uuid
-  user       User?     @relation("UserLikedSongs", fields: [userId], references: [id])
-  playlistId String?   @db.Uuid
-  playlist   Playlist? @relation("PlaylistSongs", fields: [playlistId], references: [id])
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  queuedUserId  String?   @db.Uuid // Foreign key for the new queuedSongs relation
-  queuedUser    User?     @relation("UserQueuedSongs", fields: [queuedUserId], references: [id])
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  songId       String    @unique(map: "Song_songId_key")
+  userId       String?   @db.Uuid
+  likedByUsers User[]    @relation("UserLikedSongs")
+  playlistId   String?   @db.Uuid
+  playlist     Playlist? @relation("PlaylistSongs", fields: [playlistId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  queuedUserId String?   @db.Uuid // Foreign key for the new queuedSongs relation
+  queuedUser   User?     @relation("UserQueuedSongs", fields: [queuedUserId], references: [id])
 }
 
 model PlaylistUser {
